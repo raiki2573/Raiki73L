@@ -13,51 +13,70 @@
     <div class="flex justify-between items-center border-b pb-4">
       <div>
         <h1 class="text-xl font-bold text-slate-900">ゲーム精算 & スコア集計</h1>
-        <p class="text-xs text-slate-500 mt-0.5">自動保存 / レート連動 / LINE共有</p>
+        <p class="text-xs text-slate-500 mt-0.5">対戦毎レート変更 / 複数戦合算 / LINE共有</p>
       </div>
-      <button id="reset-btn" class="text-xs text-red-500 hover:text-red-700 underline">初期化</button>
+      <button id="reset-all-btn" class="text-xs text-red-500 hover:text-red-700 underline">本日分を全初期化</button>
     </div>
 
-    <!-- ゲーム設定 & 日付 -->
-    <div class="space-y-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">対戦日</label>
-          <input type="date" id="match-date" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-sm font-medium" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">ゲーム種別</label>
-          <select id="game-type" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-sm font-medium">
-            <option value="ポーカー">ポーカー</option>
-            <option value="カタン">カタン</option>
-          </select>
-        </div>
+    <!-- 日付 & プレイヤー名設定 -->
+    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">対戦日</label>
+        <input type="date" id="match-date" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-sm font-medium" />
       </div>
 
-      <!-- レート設定エリア（ゲーム選択で動的切り替え） -->
-      <div id="rate-settings-container" class="border-t border-slate-200 pt-2.5"></div>
+      <div>
+        <div class="flex justify-between items-center mb-1.5">
+          <label class="text-xs font-semibold text-slate-600">参加プレイヤー名 (全戦共通)</label>
+          <button id="add-player-btn" class="text-[11px] bg-white border border-slate-300 text-blue-600 font-bold px-2 py-0.5 rounded shadow-sm hover:bg-blue-50">+ 追加</button>
+        </div>
+        <div id="player-names-container" class="grid grid-cols-2 gap-2"></div>
+      </div>
     </div>
 
-    <!-- プレイヤー一覧テーブル -->
+    <!-- 現在入力中の対戦（ラウンド） -->
+    <div class="border-2 border-indigo-100 bg-indigo-50/40 p-4 rounded-xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-sm font-bold text-indigo-900 flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-indigo-600 inline-block"></span>
+          第<span id="current-round-number">1</span>戦の入力
+        </h2>
+        <select id="game-type" class="bg-white border border-indigo-200 rounded-lg px-2 py-1 text-xs font-bold text-indigo-700">
+          <option value="ポーカー">ポーカー</option>
+          <option value="カタン">カタン</option>
+        </select>
+      </div>
+
+      <!-- 対戦ごとのレート設定 -->
+      <div id="rate-settings-container" class="bg-white p-2.5 rounded-lg border border-indigo-100"></div>
+
+      <!-- ラウンド用スコア入力リスト -->
+      <div>
+        <div id="round-column-headers" class="text-[11px] font-semibold text-slate-400 px-2 py-1 flex items-center gap-2"></div>
+        <div id="round-scores-list" class="space-y-1.5"></div>
+      </div>
+
+      <!-- 収支判定 & ラウンド保存ボタン -->
+      <div class="flex items-center justify-between pt-1">
+        <div id="round-balance-badge" class="text-xs font-bold"></div>
+        <button id="save-round-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow transition active:scale-95 disabled:opacity-50">
+          この対戦を確定・保存
+        </button>
+      </div>
+    </div>
+
+    <!-- 本日の対戦履歴リスト -->
     <div>
-      <div class="flex justify-between items-center mb-2">
-        <label class="text-sm font-bold text-slate-700" id="table-title">プレイヤー & スコア入力</label>
-        <button id="add-player-btn" class="text-xs bg-blue-50 text-blue-600 font-semibold px-2.5 py-1 rounded-lg border border-blue-200 hover:bg-blue-100">+ プレイヤー追加</button>
+      <h3 class="text-sm font-bold text-slate-700 mb-2">本日の対戦履歴 (<span id="rounds-count">0</span>戦)</h3>
+      <div id="rounds-history-list" class="space-y-2 text-xs">
+        <p class="text-slate-400 text-xs py-2 text-center bg-slate-50 rounded-lg border border-dashed border-slate-200">対戦を確定するとここに履歴がたまります</p>
       </div>
-
-      <!-- テーブルヘッダー -->
-      <div id="column-headers" class="text-[11px] font-semibold text-slate-400 px-2 py-1 flex items-center gap-2"></div>
-
-      <div class="space-y-2" id="players-list"></div>
-
-      <!-- 収支バランスインジケーター -->
-      <div id="balance-indicator" class="mt-3 p-2.5 rounded-lg text-xs font-semibold flex justify-between items-center"></div>
     </div>
 
-    <!-- 精算送金プラン & LINEコピー -->
+    <!-- 本日の総合成績 & 最終精算ルート -->
     <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
       <div class="flex justify-between items-center">
-        <h2 class="text-sm font-bold text-slate-800">最小送金プラン (精算ルート)</h2>
+        <h2 class="text-sm font-bold text-slate-800">本日の最終精算ルート (全対戦合算)</h2>
         <button id="copy-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition active:scale-95">
           LINE用にコピー
         </button>
@@ -68,26 +87,31 @@
 
     <!-- コピー用整形テキストプレビュー -->
     <div>
-      <label class="block text-xs font-semibold text-slate-500 mb-1">共有テキストプレビュー</label>
-      <textarea id="share-text" readonly class="w-full h-36 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono text-slate-700 select-all"></textarea>
+      <label class="block text-xs font-semibold text-slate-500 mb-1">LINE/チャット用プレビュー</label>
+      <textarea id="share-text" readonly class="w-full h-40 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono text-slate-700 select-all"></textarea>
     </div>
 
   </div>
 
   <script>
-    const STORAGE_KEY = 'game_settlement_app_data_v2';
+    const STORAGE_KEY = 'game_multi_round_app_v1';
+    
     const defaultData = {
       date: new Date().toISOString().split('T')[0],
-      game: 'ポーカー',
-      pokerRate: 1,       // 1チップあたりのレート
-      catanPtRate: 100,   // カタン: 1勝利点あたりのレート
-      catanWinBonus: 500, // カタン: 1勝あたりのボーナス
-      players: [
-        { id: 1, name: 'プレイヤーA', buyIn: 1000, cashOut: 2500, catanPts: 10, catanWins: 1 },
-        { id: 2, name: 'プレイヤーB', buyIn: 1000, cashOut: 1500, catanPts: 8,  catanWins: 0 },
-        { id: 3, name: 'プレイヤーC', buyIn: 1000, cashOut: 0,    catanPts: 7,  catanWins: 0 },
-        { id: 4, name: 'プレイヤーD', buyIn: 1000, cashOut: 0,    catanPts: 5,  catanWins: 0 }
-      ]
+      players: ['プレイヤーA', 'プレイヤーB', 'プレイヤーC', 'プレイヤーD'],
+      rounds: [], // { id, roundNum, game, rates, scores, nets }
+      current: {
+        game: 'ポーカー',
+        pokerRate: 1,
+        catanPtRate: 100,
+        catanWinBonus: 500,
+        scores: [
+          { buyIn: 1000, cashOut: 2000, catanPts: 10, catanWins: 1 },
+          { buyIn: 1000, cashOut: 1000, catanPts: 8,  catanWins: 0 },
+          { buyIn: 1000, cashOut: 1000, catanPts: 7,  catanWins: 0 },
+          { buyIn: 1000, cashOut: 0,    catanPts: 5,  catanWins: 0 }
+        ]
+      }
     };
 
     let state = loadState();
@@ -95,7 +119,9 @@
     function loadState() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
-        return saved ? { ...defaultData, ...JSON.parse(saved) } : defaultData;
+        if (!saved) return defaultData;
+        const parsed = JSON.parse(saved);
+        return { ...defaultData, ...parsed };
       } catch (e) {
         return defaultData;
       }
@@ -105,50 +131,63 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
-    // 各自の純損益（精算額）を計算
-    function calculatePlayerNets() {
-      const isPoker = state.game === 'ポーカー';
+    // 現在入力中ラウンドの純収支を計算
+    function calculateCurrentRoundNets() {
+      const isPoker = state.current.game === 'ポーカー';
+      const n = state.players.length;
 
       if (isPoker) {
-        const rate = Number(state.pokerRate) || 1;
-        return state.players.map(p => {
-          const chipDiff = (Number(p.cashOut) || 0) - (Number(p.buyIn) || 0);
-          return Math.round(chipDiff * rate);
+        const rate = Number(state.current.pokerRate) || 1;
+        let totalDiff = 0;
+        const nets = state.players.map((_, i) => {
+          const s = state.current.scores[i] || { buyIn: 0, cashOut: 0 };
+          const diff = (Number(s.cashOut) || 0) - (Number(s.buyIn) || 0);
+          totalDiff += diff;
+          return Math.round(diff * rate);
         });
+        return { nets, isBalanced: totalDiff === 0, errorAmount: totalDiff };
       } else {
-        // カタン: (個人スコア - 平均スコア) * 1点レート + (勝利回数 - 平均勝利数) * 勝利ボーナス
-        const n = state.players.length || 1;
-        const totalPts = state.players.reduce((sum, p) => sum + (Number(p.catanPts) || 0), 0);
-        const totalWins = state.players.reduce((sum, p) => sum + (Number(p.catanWins) || 0), 0);
-        const avgPts = totalPts / n;
-        const avgWins = totalWins / n;
+        const ptRate = Number(state.current.catanPtRate) || 0;
+        const winBonus = Number(state.current.catanWinBonus) || 0;
 
-        const ptRate = Number(state.catanPtRate) || 0;
-        const winBonus = Number(state.catanWinBonus) || 0;
-
-        return state.players.map(p => {
-          const scoreDiff = (Number(p.catanPts) || 0) - avgPts;
-          const winDiff = (Number(p.catanWins) || 0) - avgWins;
-          return Math.round((scoreDiff * ptRate) + (winDiff * winBonus));
+        let totalPts = 0;
+        let totalWins = 0;
+        state.players.forEach((_, i) => {
+          const s = state.current.scores[i] || { catanPts: 0, catanWins: 0 };
+          totalPts += Number(s.catanPts) || 0;
+          totalWins += Number(s.catanWins) || 0;
         });
+
+        const avgPts = totalPts / (n || 1);
+        const avgWins = totalWins / (n || 1);
+
+        const nets = state.players.map((_, i) => {
+          const s = state.current.scores[i] || { catanPts: 0, catanWins: 0 };
+          const pDiff = (Number(s.catanPts) || 0) - avgPts;
+          const wDiff = (Number(s.catanWins) || 0) - avgWins;
+          return Math.round((pDiff * ptRate) + (wDiff * winBonus));
+        });
+
+        const sum = nets.reduce((a, b) => a + b, 0);
+        return { nets, isBalanced: Math.abs(sum) <= 2, errorAmount: sum };
       }
     }
 
-    // 最小送金回数（貪欲法）
-    function calculateSettlement(nets) {
+    // 最小送金ルート（貪欲法）
+    function calculateSettlement(playerTotals) {
       const debtors = [];
       const creditors = [];
 
-      state.players.forEach((p, idx) => {
-        const net = nets[idx];
-        if (net < 0) debtors.push({ name: p.name || '未設定', amount: -net });
-        else if (net > 0) creditors.push({ name: p.name || '未設定', amount: net });
+      state.players.forEach((name, idx) => {
+        const amt = playerTotals[idx];
+        if (amt < 0) debtors.push({ name, amount: -amt });
+        else if (amt > 0) creditors.push({ name, amount: amt });
       });
 
       debtors.sort((a, b) => b.amount - a.amount);
       creditors.sort((a, b) => b.amount - a.amount);
 
-      const transactions = [];
+      const txs = [];
       let i = 0, j = 0;
 
       while (i < debtors.length && j < creditors.length) {
@@ -157,7 +196,7 @@
         const settle = Math.min(d.amount, c.amount);
 
         if (settle > 0) {
-          transactions.push({ from: d.name, to: c.name, amount: settle });
+          txs.push({ from: d.name, to: c.name, amount: settle });
         }
 
         d.amount -= settle;
@@ -167,95 +206,206 @@
         if (c.amount === 0) j++;
       }
 
-      return transactions;
+      return txs;
     }
 
+    // レート入力UI描画
     function renderRateSettings() {
       const box = document.getElementById('rate-settings-container');
-      if (state.game === 'ポーカー') {
+      if (state.current.game === 'ポーカー') {
         box.innerHTML = `
           <div class="flex items-center justify-between">
-            <label class="text-xs font-semibold text-slate-600">レート設定 (1チップ = ? pt/円)</label>
+            <span class="text-xs font-semibold text-slate-700">この戦のレート (1チップ = ? pt)</span>
             <div class="flex items-center gap-1">
-              <span class="text-xs text-slate-400">×</span>
-              <input type="number" id="poker-rate-input" value="${state.pokerRate}" step="0.1" class="w-20 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-right font-bold" />
+              <input type="number" id="current-poker-rate" value="${state.current.pokerRate}" step="0.1" class="w-20 bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-right font-bold" />
               <span class="text-xs text-slate-500">pt</span>
             </div>
           </div>
         `;
-        document.getElementById('poker-rate-input').addEventListener('input', e => {
-          state.pokerRate = Number(e.target.value);
+        document.getElementById('current-poker-rate').addEventListener('input', e => {
+          state.current.pokerRate = Number(e.target.value);
           saveState();
-          updateCalculations();
+          updateLiveCalculations();
         });
       } else {
         box.innerHTML = `
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">点数レート (1点あたり)</label>
+              <span class="block text-[11px] font-semibold text-slate-600 mb-0.5">1点あたりのレート</span>
               <div class="flex items-center gap-1">
-                <input type="number" id="catan-pt-rate-input" value="${state.catanPtRate}" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-right font-bold" />
+                <input type="number" id="current-catan-pt-rate" value="${state.current.catanPtRate}" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-right font-bold" />
                 <span class="text-xs text-slate-500">pt</span>
               </div>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">1勝ボーナス (勝者総取り)</label>
+              <span class="block text-[11px] font-semibold text-slate-600 mb-0.5">1勝ボーナス (総取り)</span>
               <div class="flex items-center gap-1">
-                <input type="number" id="catan-win-bonus-input" value="${state.catanWinBonus}" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-right font-bold" />
+                <input type="number" id="current-catan-win-bonus" value="${state.current.catanWinBonus}" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-right font-bold" />
                 <span class="text-xs text-slate-500">pt</span>
               </div>
             </div>
           </div>
         `;
-        document.getElementById('catan-pt-rate-input').addEventListener('input', e => {
-          state.catanPtRate = Number(e.target.value);
+        document.getElementById('current-catan-pt-rate').addEventListener('input', e => {
+          state.current.catanPtRate = Number(e.target.value);
           saveState();
-          updateCalculations();
+          updateLiveCalculations();
         });
-        document.getElementById('catan-win-bonus-input').addEventListener('input', e => {
-          state.catanWinBonus = Number(e.target.value);
+        document.getElementById('current-catan-win-bonus').addEventListener('input', e => {
+          state.current.catanWinBonus = Number(e.target.value);
           saveState();
-          updateCalculations();
+          updateLiveCalculations();
         });
       }
     }
 
-    function updateCalculations() {
-      const nets = calculatePlayerNets();
-      const totalNet = nets.reduce((sum, n) => sum + n, 0);
+    // プレイヤー名欄の描画
+    function renderPlayerNames() {
+      const container = document.getElementById('player-names-container');
+      container.innerHTML = '';
+      state.players.forEach((pName, idx) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'flex items-center gap-1';
+        wrap.innerHTML = `
+          <input type="text" value="${pName}" data-idx="${idx}" class="p-name-input w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-semibold" placeholder="名前" />
+          ${state.players.length > 2 ? `<button data-idx="${idx}" class="p-del-btn text-slate-400 hover:text-rose-500 text-xs px-1">✕</button>` : ''}
+        `;
+        container.appendChild(wrap);
+      });
+    }
 
-      state.players.forEach((p, idx) => {
-        const net = nets[idx];
-        const netSpan = document.getElementById(`net-${idx}`);
-        if (netSpan) {
-          netSpan.innerText = net > 0 ? `+${net.toLocaleString()}` : `${net.toLocaleString()}`;
-          netSpan.className = `w-1/6 text-right text-xs font-bold ${net > 0 ? 'text-emerald-600' : net < 0 ? 'text-rose-500' : 'text-slate-400'}`;
+    // スコア入力行の描画
+    function renderScoreRows() {
+      const list = document.getElementById('round-scores-list');
+      const headers = document.getElementById('round-column-headers');
+      list.innerHTML = '';
+
+      const isPoker = state.current.game === 'ポーカー';
+      if (isPoker) {
+        headers.innerHTML = `
+          <span class="w-1/3">プレイヤー</span>
+          <span class="w-1/4 text-right">バイイン</span>
+          <span class="w-1/4 text-right">払出</span>
+          <span class="w-1/6 text-right">収支</span>
+        `;
+      } else {
+        headers.innerHTML = `
+          <span class="w-1/3">プレイヤー</span>
+          <span class="w-1/4 text-right">点数</span>
+          <span class="w-1/4 text-right">勝数</span>
+          <span class="w-1/6 text-right">収支</span>
+        `;
+      }
+
+      state.players.forEach((name, idx) => {
+        if (!state.current.scores[idx]) {
+          state.current.scores[idx] = { buyIn: 1000, cashOut: 0, catanPts: 5, catanWins: 0 };
+        }
+        const s = state.current.scores[idx];
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-200';
+
+        if (isPoker) {
+          row.innerHTML = `
+            <span class="w-1/3 text-xs font-bold text-slate-700 truncate">${name}</span>
+            <input type="number" value="${s.buyIn}" data-idx="${idx}" class="p-buy w-1/4 bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-right" />
+            <input type="number" value="${s.cashOut}" data-idx="${idx}" class="p-cash w-1/4 bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-right" />
+            <span id="live-net-${idx}" class="w-1/6 text-right text-xs font-bold"></span>
+          `;
+        } else {
+          row.innerHTML = `
+            <span class="w-1/3 text-xs font-bold text-slate-700 truncate">${name}</span>
+            <input type="number" value="${s.catanPts}" data-idx="${idx}" class="p-pts w-1/4 bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-right" />
+            <input type="number" value="${s.catanWins}" data-idx="${idx}" class="p-wins w-1/4 bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-right" />
+            <span id="live-net-${idx}" class="w-1/6 text-right text-xs font-bold"></span>
+          `;
+        }
+        list.appendChild(row);
+      });
+
+      updateLiveCalculations();
+    }
+
+    // 入力中のリアルタイム計算反映
+    function updateLiveCalculations() {
+      const calc = calculateCurrentRoundNets();
+      state.players.forEach((_, idx) => {
+        const span = document.getElementById(`live-net-${idx}`);
+        if (span) {
+          const val = calc.nets[idx];
+          span.innerText = val > 0 ? `+${val.toLocaleString()}` : `${val.toLocaleString()}`;
+          span.className = `w-1/6 text-right text-xs font-bold ${val > 0 ? 'text-emerald-600' : val < 0 ? 'text-rose-500' : 'text-slate-400'}`;
         }
       });
 
-      const indicator = document.getElementById('balance-indicator');
-      const isValid = Math.abs(totalNet) <= 1; // 丸め誤差考慮
-      if (isValid) {
-        indicator.className = 'mt-3 p-2.5 rounded-lg text-xs font-semibold flex justify-between items-center bg-emerald-50 text-emerald-700 border border-emerald-200';
-        indicator.innerHTML = '<span>収支バランス: 整合完了</span><span>±0 pt</span>';
+      const badge = document.getElementById('round-balance-badge');
+      const saveBtn = document.getElementById('save-round-btn');
+
+      if (calc.isBalanced) {
+        badge.innerText = '収支整合: OK (±0)';
+        badge.className = 'text-xs font-bold text-emerald-600';
+        saveBtn.disabled = false;
       } else {
-        indicator.className = 'mt-3 p-2.5 rounded-lg text-xs font-semibold flex justify-between items-center bg-rose-50 text-rose-600 border border-rose-200';
-        indicator.innerHTML = `<span>収支バランス: 誤差あり</span><span>${totalNet > 0 ? '+' + totalNet : totalNet} pt (入力を確認してください)</span>`;
+        badge.innerText = `収支不一致: ${calc.errorAmount > 0 ? '+' : ''}${calc.errorAmount} (入出金を確認)`;
+        badge.className = 'text-xs font-bold text-rose-500';
+        saveBtn.disabled = true;
       }
 
+      renderHistoryAndTotals();
+    }
+
+    // 履歴と合算精算の描画
+    function renderHistoryAndTotals() {
+      document.getElementById('current-round-number').innerText = state.rounds.length + 1;
+      document.getElementById('rounds-count').innerText = state.rounds.length;
+
+      const historyBox = document.getElementById('rounds-history-list');
+      if (state.rounds.length === 0) {
+        historyBox.innerHTML = '<p class="text-slate-400 text-xs py-2 text-center bg-slate-50 rounded-lg border border-dashed border-slate-200">対戦を確定するとここに履歴がたまります</p>';
+      } else {
+        historyBox.innerHTML = state.rounds.map((r, rIdx) => {
+          let scoreDetail = '';
+          if (r.game === 'ポーカー') {
+            scoreDetail = `レート: 1チップ=${r.rates.pokerRate}pt`;
+          } else {
+            scoreDetail = `点レート:${r.rates.catanPtRate}pt / 勝利賞:${r.rates.catanWinBonus}pt`;
+          }
+
+          const scoresRow = state.players.map((pName, pIdx) => {
+            const net = r.nets[pIdx] || 0;
+            return `<span class="inline-block mr-2">${pName}: <b class="${net >= 0 ? 'text-emerald-600' : 'text-rose-500'}">${net > 0 ? '+' : ''}${net}</b></span>`;
+          }).join('');
+
+          return `
+            <div class="bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-indigo-700">第${r.roundNum}戦 [${r.game}]</span>
+                  <span class="text-[10px] text-slate-400">${scoreDetail}</span>
+                </div>
+                <div class="text-[11px] text-slate-600">${scoresRow}</div>
+              </div>
+              <button data-ridx="${rIdx}" class="del-round-btn text-xs text-rose-400 hover:text-rose-600 font-bold px-2 py-1">削除</button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 総合累計収支の計算
+      const totalNets = new Array(state.players.length).fill(0);
+      state.rounds.forEach(r => {
+        r.nets.forEach((val, pIdx) => {
+          if (pIdx < totalNets.length) totalNets[pIdx] += val;
+        });
+      });
+
+      const txs = calculateSettlement(totalNets);
       const settleBox = document.getElementById('settlement-results');
-      const shareText = document.getElementById('share-text');
 
-      if (!isValid) {
-        settleBox.innerHTML = '<p class="text-xs text-rose-500">※ 差分が ±0 になると送金ルートが計算されます。</p>';
-        shareText.value = '【収支未整合】バイインとキャッシュアウトの合計が一致していません。';
-        return;
-      }
-
-      const txs = calculateSettlement(nets);
-
-      if (txs.length === 0) {
-        settleBox.innerHTML = '<p class="text-xs text-slate-400">精算の必要はありません（全員差分0）</p>';
+      if (state.rounds.length === 0) {
+        settleBox.innerHTML = '<p class="text-xs text-slate-400">対戦が記録されると最終精算ルートが表示されます</p>';
+      } else if (txs.length === 0) {
+        settleBox.innerHTML = '<p class="text-xs text-slate-400">全員の合計収支が±0です（精算なし）</p>';
       } else {
         settleBox.innerHTML = txs.map(t => `
           <div class="flex items-center justify-between text-xs bg-white p-2 rounded border border-slate-200">
@@ -269,151 +419,159 @@
         `).join('');
       }
 
-      // 共有テキスト生成
-      const isPoker = state.game === 'ポーカー';
-      let txt = `【対戦結果・精算】${state.date} (${state.game})\n`;
-      if (isPoker) {
-        txt += `※ レート: 1チップ = ${state.pokerRate} pt\n`;
+      // LINE共有用テキスト生成
+      let share = `【対戦結果・精算合算】${state.date}\n━━━━━━━━━━━━━━\n`;
+      share += `■ 本日の対戦履歴 (${state.rounds.length}戦)\n`;
+      if (state.rounds.length === 0) {
+        share += `・対戦履歴なし\n`;
       } else {
-        txt += `※ 点数レート: 1点 ${state.catanPtRate} pt / 勝利ボーナス: ${state.catanWinBonus} pt\n`;
-      }
-      txt += `━━━━━━━━━━━━━━\n■ 最終収支\n`;
-
-      state.players.forEach((p, idx) => {
-        const net = nets[idx];
-        const sign = net > 0 ? '+' : '';
-        if (isPoker) {
-          txt += `・${p.name || '未設定'}: ${sign}${net.toLocaleString()} pt (IN: ${Number(p.buyIn).toLocaleString()} / OUT: ${Number(p.cashOut).toLocaleString()})\n`;
-        } else {
-          txt += `・${p.name || '未設定'}: ${sign}${net.toLocaleString()} pt (${p.catanPts || 0}点 / ${p.catanWins || 0}勝)\n`;
-        }
-      });
-
-      txt += `\n■ 精算送金ルート (${txs.length}手)\n`;
-      if (txs.length === 0) {
-        txt += '・精算なし（全員±0）\n';
-      } else {
-        txs.forEach((t, i) => {
-          txt += `${i + 1}. ${t.from} ➔ ${t.to}: ${t.amount.toLocaleString()} pt\n`;
+        state.rounds.forEach(r => {
+          const detail = r.game === 'ポーカー' ? `(1枚=${r.rates.pokerRate}pt)` : `(1点=${r.rates.catanPtRate}pt/賞${r.rates.catanWinBonus}pt)`;
+          share += `▼ 第${r.roundNum}戦 [${r.game} ${detail}]\n`;
+          state.players.forEach((pName, pIdx) => {
+            const net = r.nets[pIdx] || 0;
+            share += `  ・${pName}: ${net > 0 ? '+' : ''}${net.toLocaleString()} pt\n`;
+          });
         });
       }
-      txt += '━━━━━━━━━━━━━━';
-      shareText.value = txt;
-    }
 
-    function buildPlayerRows() {
-      const list = document.getElementById('players-list');
-      const headers = document.getElementById('column-headers');
-      list.innerHTML = '';
-
-      const isPoker = state.game === 'ポーカー';
-
-      if (isPoker) {
-        headers.innerHTML = `
-          <span class="w-1/3">名前</span>
-          <span class="w-1/4 text-right">バイイン(枚)</span>
-          <span class="w-1/4 text-right">払出(枚)</span>
-          <span class="w-1/6 text-right">収支(pt)</span>
-          <span class="w-6"></span>
-        `;
-      } else {
-        headers.innerHTML = `
-          <span class="w-1/3">名前</span>
-          <span class="w-1/4 text-right">獲得点</span>
-          <span class="w-1/4 text-right">勝利回数</span>
-          <span class="w-1/6 text-right">収支(pt)</span>
-          <span class="w-6"></span>
-        `;
-      }
-
-      state.players.forEach((p, idx) => {
-        const row = document.createElement('div');
-        row.className = 'flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200';
-        
-        if (isPoker) {
-          row.innerHTML = `
-            <input type="text" value="${p.name}" data-idx="${idx}" class="p-name w-1/3 bg-white border border-slate-300 rounded px-2 py-1 text-xs font-medium" placeholder="名前">
-            <input type="number" value="${p.buyIn}" data-idx="${idx}" class="p-buy w-1/4 bg-white border border-slate-300 rounded px-2 py-1 text-xs text-right" placeholder="バイイン">
-            <input type="number" value="${p.cashOut}" data-idx="${idx}" class="p-cash w-1/4 bg-white border border-slate-300 rounded px-2 py-1 text-xs text-right" placeholder="払出">
-            <span id="net-${idx}" class="w-1/6 text-right text-xs font-bold"></span>
-            <button data-idx="${idx}" class="p-del text-slate-400 hover:text-rose-500 text-xs px-1 w-6">✕</button>
-          `;
-        } else {
-          row.innerHTML = `
-            <input type="text" value="${p.name}" data-idx="${idx}" class="p-name w-1/3 bg-white border border-slate-300 rounded px-2 py-1 text-xs font-medium" placeholder="名前">
-            <input type="number" value="${p.catanPts ?? 0}" data-idx="${idx}" class="p-catan-pts w-1/4 bg-white border border-slate-300 rounded px-2 py-1 text-xs text-right" placeholder="点数">
-            <input type="number" value="${p.catanWins ?? 0}" data-idx="${idx}" class="p-catan-wins w-1/4 bg-white border border-slate-300 rounded px-2 py-1 text-xs text-right" placeholder="勝数">
-            <span id="net-${idx}" class="w-1/6 text-right text-xs font-bold"></span>
-            <button data-idx="${idx}" class="p-del text-slate-400 hover:text-rose-500 text-xs px-1 w-6">✕</button>
-          `;
-        }
-        list.appendChild(row);
+      share += `\n■ 最終総合収支\n`;
+      state.players.forEach((name, idx) => {
+        const net = totalNets[idx];
+        share += `・${name}: ${net > 0 ? '+' : ''}${net.toLocaleString()} pt\n`;
       });
 
-      updateCalculations();
+      share += `\n■ 最終精算ルート (${txs.length}手)\n`;
+      if (txs.length === 0) {
+        share += `・精算なし（全員±0）\n`;
+      } else {
+        txs.forEach((t, i) => {
+          share += `${i + 1}. ${t.from} ➔ ${t.to}: ${t.amount.toLocaleString()} pt\n`;
+        });
+      }
+      share += `━━━━━━━━━━━━━━`;
+      document.getElementById('share-text').value = share;
     }
 
+    // イベント設定
     document.getElementById('match-date').value = state.date;
-    document.getElementById('game-type').value = state.game;
-
     document.getElementById('match-date').addEventListener('change', e => {
       state.date = e.target.value;
       saveState();
-      updateCalculations();
+      renderHistoryAndTotals();
     });
 
+    document.getElementById('game-type').value = state.current.game;
     document.getElementById('game-type').addEventListener('change', e => {
-      state.game = e.target.value;
+      state.current.game = e.target.value;
       saveState();
       renderRateSettings();
-      buildPlayerRows();
+      renderScoreRows();
     });
 
-    document.getElementById('players-list').addEventListener('input', e => {
-      const idx = e.target.dataset.idx;
-      if (idx === undefined) return;
-      if (e.target.classList.contains('p-name')) state.players[idx].name = e.target.value;
-      if (e.target.classList.contains('p-buy')) state.players[idx].buyIn = Number(e.target.value);
-      if (e.target.classList.contains('p-cash')) state.players[idx].cashOut = Number(e.target.value);
-      if (e.target.classList.contains('p-catan-pts')) state.players[idx].catanPts = Number(e.target.value);
-      if (e.target.classList.contains('p-catan-wins')) state.players[idx].catanWins = Number(e.target.value);
-      saveState();
-      updateCalculations();
-    });
-
-    document.getElementById('players-list').addEventListener('click', e => {
-      if (e.target.classList.contains('p-del')) {
+    // プレイヤー名の編集
+    document.getElementById('player-names-container').addEventListener('input', e => {
+      if (e.target.classList.contains('p-name-input')) {
         const idx = Number(e.target.dataset.idx);
-        state.players.splice(idx, 1);
+        state.players[idx] = e.target.value;
         saveState();
-        buildPlayerRows();
+        renderScoreRows();
+        renderHistoryAndTotals();
       }
     });
 
+    // プレイヤー削除
+    document.getElementById('player-names-container').addEventListener('click', e => {
+      if (e.target.classList.contains('p-del-btn')) {
+        const idx = Number(e.target.dataset.idx);
+        state.players.splice(idx, 1);
+        state.current.scores.splice(idx, 1);
+        saveState();
+        renderPlayerNames();
+        renderScoreRows();
+      }
+    });
+
+    // プレイヤー追加
     document.getElementById('add-player-btn').addEventListener('click', () => {
-      state.players.push({
+      const newName = `プレイヤー${state.players.length + 1}`;
+      state.players.push(newName);
+      state.current.scores.push({ buyIn: 1000, cashOut: 0, catanPts: 5, catanWins: 0 });
+      saveState();
+      renderPlayerNames();
+      renderScoreRows();
+    });
+
+    // ラウンド内スコア入力
+    document.getElementById('round-scores-list').addEventListener('input', e => {
+      const idx = Number(e.target.dataset.idx);
+      if (isNaN(idx)) return;
+      if (!state.current.scores[idx]) state.current.scores[idx] = {};
+
+      if (e.target.classList.contains('p-buy')) state.current.scores[idx].buyIn = Number(e.target.value);
+      if (e.target.classList.contains('p-cash')) state.current.scores[idx].cashOut = Number(e.target.value);
+      if (e.target.classList.contains('p-pts')) state.current.scores[idx].catanPts = Number(e.target.value);
+      if (e.target.classList.contains('p-wins')) state.current.scores[idx].catanWins = Number(e.target.value);
+
+      saveState();
+      updateLiveCalculations();
+    });
+
+    // ラウンド確定・保存
+    document.getElementById('save-round-btn').addEventListener('click', () => {
+      const calc = calculateCurrentRoundNets();
+      if (!calc.isBalanced) return;
+
+      const newRound = {
         id: Date.now(),
-        name: `プレイヤー${state.players.length + 1}`,
+        roundNum: state.rounds.length + 1,
+        game: state.current.game,
+        rates: {
+          pokerRate: state.current.pokerRate,
+          catanPtRate: state.current.catanPtRate,
+          catanWinBonus: state.current.catanWinBonus
+        },
+        scores: JSON.parse(JSON.stringify(state.current.scores)),
+        nets: calc.nets
+      };
+
+      state.rounds.push(newRound);
+
+      // 次戦用に入力値をリセット（バイインのみ1000を保持）
+      state.current.scores = state.players.map(() => ({
         buyIn: 1000,
         cashOut: 0,
         catanPts: 5,
         catanWins: 0
-      });
+      }));
+
       saveState();
-      buildPlayerRows();
+      renderScoreRows();
+      renderHistoryAndTotals();
     });
 
-    document.getElementById('reset-btn').addEventListener('click', () => {
-      if (confirm('データを初期化しますか？')) {
-        state = JSON.parse(JSON.stringify(defaultData));
+    // 履歴の個別削除
+    document.getElementById('rounds-history-list').addEventListener('click', e => {
+      if (e.target.classList.contains('del-round-btn')) {
+        const rIdx = Number(e.target.dataset.ridx);
+        state.rounds.splice(rIdx, 1);
+        // 番号の再振り分け
+        state.rounds.forEach((r, i) => { r.roundNum = i + 1; });
         saveState();
-        document.getElementById('match-date').value = state.date;
-        document.getElementById('game-type').value = state.game;
-        renderRateSettings();
-        buildPlayerRows();
+        renderHistoryAndTotals();
       }
     });
 
+    // 全初期化
+    document.getElementById('reset-all-btn').addEventListener('click', () => {
+      if (confirm('本日のすべての対戦履歴とスコアをリセットしますか？')) {
+        state = JSON.parse(JSON.stringify(defaultData));
+        saveState();
+        init();
+      }
+    });
+
+    // コピー
     document.getElementById('copy-btn').addEventListener('click', () => {
       const textarea = document.getElementById('share-text');
       textarea.select();
@@ -429,8 +587,16 @@
       });
     });
 
-    renderRateSettings();
-    buildPlayerRows();
+    function init() {
+      document.getElementById('match-date').value = state.date;
+      document.getElementById('game-type').value = state.current.game;
+      renderPlayerNames();
+      renderRateSettings();
+      renderScoreRows();
+      renderHistoryAndTotals();
+    }
+
+    init();
   </script>
 </body>
 </html>
