@@ -41,14 +41,10 @@
         <button id="add-player-btn" class="text-xs bg-blue-50 text-blue-600 font-semibold px-2.5 py-1 rounded-lg border border-blue-200 hover:bg-blue-100">+ プレイヤー追加</button>
       </div>
 
-      <div class="space-y-2" id="players-list">
-        <!-- JSで動的に行をレンダリング -->
-      </div>
+      <div class="space-y-2" id="players-list"></div>
 
       <!-- 収支バランスインジケーター -->
-      <div id="balance-indicator" class="mt-3 p-2.5 rounded-lg text-xs font-semibold flex justify-between items-center">
-        <!-- 差分判定 -->
-      </div>
+      <div id="balance-indicator" class="mt-3 p-2.5 rounded-lg text-xs font-semibold flex justify-between items-center"></div>
     </div>
 
     <!-- 精算送金プラン & LINEコピー -->
@@ -60,9 +56,7 @@
         </button>
       </div>
 
-      <div id="settlement-results" class="text-sm space-y-1.5 text-slate-700">
-        <!-- 精算ルート一覧 -->
-      </div>
+      <div id="settlement-results" class="text-sm space-y-1.5 text-slate-700"></div>
     </div>
 
     <!-- コピー用整形テキストプレビュー -->
@@ -74,7 +68,6 @@
   </div>
 
   <script>
-    // 初期状態
     const STORAGE_KEY = 'game_settlement_app_data';
     const defaultData = {
       date: new Date().toISOString().split('T')[0],
@@ -102,15 +95,14 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
-    // 最小送金回数アルゴリズム（貪欲法）
     function calculateSettlement(players) {
       const debtors = [];
       const creditors = [];
 
       players.forEach(p => {
         const net = (Number(p.cashOut) || 0) - (Number(p.buyIn) || 0);
-        if (net < 0) debtors.push({ name: p.name, amount: -net });
-        else if (net > 0) creditors.push({ name: p.name, amount: net });
+        if (net < 0) debtors.push({ name: p.name || '未設定', amount: -net });
+        else if (net > 0) creditors.push({ name: p.name || '未設定', amount: net });
       });
 
       debtors.sort((a, b) => b.amount - a.amount);
@@ -138,46 +130,30 @@
       return transactions;
     }
 
-    // レンダリング処理
-    function render() {
-      document.getElementById('match-date').value = state.date;
-      document.getElementById('game-type').value = state.game;
-
-      const list = document.getElementById('players-list');
-      list.innerHTML = '';
-
+    // 入力欄を再生成せず、計算結果と表示のみを更新する
+    function updateCalculations() {
       let totalNet = 0;
 
       state.players.forEach((p, idx) => {
         const net = (Number(p.cashOut) || 0) - (Number(p.buyIn) || 0);
         totalNet += net;
-
-        const row = document.createElement('div');
-        row.className = 'flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200';
-        row.innerHTML = `
-          <input type="text" value="${p.name}" data-idx="${idx}" class="p-name w-1/3 bg-white border border-slate-300 rounded px-2 py-1 text-xs font-medium" placeholder="名前">
-          <input type="number" value="${p.buyIn}" data-idx="${idx}" class="p-buy w-1/4 bg-white border border-slate-300 rounded px-2 py-1 text-xs text-right" placeholder="バイイン">
-          <input type="number" value="${p.cashOut}" data-idx="${idx}" class="p-cash w-1/4 bg-white border border-slate-300 rounded px-2 py-1 text-xs text-right" placeholder="払出">
-          <span class="w-1/6 text-right text-xs font-bold ${net > 0 ? 'text-emerald-600' : net < 0 ? 'text-rose-500' : 'text-slate-400'}">
-            ${net > 0 ? '+' + net : net}
-          </span>
-          <button data-idx="${idx}" class="p-del text-slate-400 hover:text-rose-500 text-xs px-1">✕</button>
-        `;
-        list.appendChild(row);
+        const netSpan = document.getElementById(`net-${idx}`);
+        if (netSpan) {
+          netSpan.innerText = net > 0 ? `+${net}` : `${net}`;
+          netSpan.className = `w-1/6 text-right text-xs font-bold ${net > 0 ? 'text-emerald-600' : net < 0 ? 'text-rose-500' : 'text-slate-400'}`;
+        }
       });
 
-      // ゼロサム整合チェック
       const indicator = document.getElementById('balance-indicator');
       const isValid = totalNet === 0;
       if (isValid) {
         indicator.className = 'mt-3 p-2.5 rounded-lg text-xs font-semibold flex justify-between items-center bg-emerald-50 text-emerald-700 border border-emerald-200';
-        indicator.innerHTML = `<span>収支バランス: 整合完了</span><span>±0 pt</span>`;
+        indicator.innerHTML = '<span>収支バランス: 整合完了</span><span>±0 pt</span>';
       } else {
         indicator.className = 'mt-3 p-2.5 rounded-lg text-xs font-semibold flex justify-between items-center bg-rose-50 text-rose-600 border border-rose-200';
         indicator.innerHTML = `<span>収支バランス: 誤差あり</span><span>${totalNet > 0 ? '+' + totalNet : totalNet} pt (入出金を確認してください)</span>`;
       }
 
-      // 送金プラン計算
       const settleBox = document.getElementById('settlement-results');
       const shareText = document.getElementById('share-text');
 
@@ -204,39 +180,62 @@
         `).join('');
       }
 
-      // 共有用テキスト生成
       let txt = `【対戦結果・精算】${state.date} (${state.game})\n━━━━━━━━━━━━━━\n■ 最終収支\n`;
       state.players.forEach(p => {
         const net = (Number(p.cashOut) || 0) - (Number(p.buyIn) || 0);
         const sign = net > 0 ? '+' : '';
-        txt += `・${p.name}: ${sign}${net.toLocaleString()} pt (IN: ${Number(p.buyIn).toLocaleString()} / OUT: ${Number(p.cashOut).toLocaleString()})\n`;
+        txt += `・${p.name || '未設定'}: ${sign}${net.toLocaleString()} pt (IN: ${Number(p.buyIn).toLocaleString()} / OUT: ${Number(p.cashOut).toLocaleString()})\n`;
       });
 
       txt += `\n■ 精算送金ルート (${txs.length}手)\n`;
       if (txs.length === 0) {
-        txt += `・精算なし（全員±0）\n`;
+        txt += '・精算なし（全員±0）\n';
       } else {
         txs.forEach((t, i) => {
           txt += `${i + 1}. ${t.from} ➔ ${t.to}: ${t.amount.toLocaleString()} pt\n`;
         });
       }
-      txt += `━━━━━━━━━━━━━━`;
+      txt += '━━━━━━━━━━━━━━';
       shareText.value = txt;
     }
 
-    // イベントリスナー設定
+    // プレイヤーのHTML入力欄を描画
+    function buildPlayerRows() {
+      const list = document.getElementById('players-list');
+      list.innerHTML = '';
+
+      state.players.forEach((p, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200';
+        row.innerHTML = `
+          <input type="text" value="${p.name}" data-idx="${idx}" class="p-name w-1/3 bg-white border border-slate-300 rounded px-2 py-1 text-xs font-medium" placeholder="名前">
+          <input type="number" value="${p.buyIn}" data-idx="${idx}" class="p-buy w-1/4 bg-white border border-slate-300 rounded px-2 py-1 text-xs text-right" placeholder="バイイン">
+          <input type="number" value="${p.cashOut}" data-idx="${idx}" class="p-cash w-1/4 bg-white border border-slate-300 rounded px-2 py-1 text-xs text-right" placeholder="払出">
+          <span id="net-${idx}" class="w-1/6 text-right text-xs font-bold"></span>
+          <button data-idx="${idx}" class="p-del text-slate-400 hover:text-rose-500 text-xs px-1">✕</button>
+        `;
+        list.appendChild(row);
+      });
+
+      updateCalculations();
+    }
+
+    document.getElementById('match-date').value = state.date;
+    document.getElementById('game-type').value = state.game;
+
     document.getElementById('match-date').addEventListener('change', e => {
       state.date = e.target.value;
       saveState();
-      render();
+      updateCalculations();
     });
 
     document.getElementById('game-type').addEventListener('change', e => {
       state.game = e.target.value;
       saveState();
-      render();
+      updateCalculations();
     });
 
+    // 入力イベント（フォーカスを維持したまま値だけ更新）
     document.getElementById('players-list').addEventListener('input', e => {
       const idx = e.target.dataset.idx;
       if (idx === undefined) return;
@@ -244,18 +243,20 @@
       if (e.target.classList.contains('p-buy')) state.players[idx].buyIn = Number(e.target.value);
       if (e.target.classList.contains('p-cash')) state.players[idx].cashOut = Number(e.target.value);
       saveState();
-      render();
+      updateCalculations();
     });
 
+    // プレイヤー削除
     document.getElementById('players-list').addEventListener('click', e => {
       if (e.target.classList.contains('p-del')) {
         const idx = Number(e.target.dataset.idx);
         state.players.splice(idx, 1);
         saveState();
-        render();
+        buildPlayerRows();
       }
     });
 
+    // プレイヤー追加
     document.getElementById('add-player-btn').addEventListener('click', () => {
       state.players.push({
         id: Date.now(),
@@ -264,17 +265,21 @@
         cashOut: 0
       });
       saveState();
-      render();
+      buildPlayerRows();
     });
 
+    // 初期化
     document.getElementById('reset-btn').addEventListener('click', () => {
       if (confirm('データを初期化しますか？')) {
         state = JSON.parse(JSON.stringify(defaultData));
         saveState();
-        render();
+        document.getElementById('match-date').value = state.date;
+        document.getElementById('game-type').value = state.game;
+        buildPlayerRows();
       }
     });
 
+    // コピー処理
     document.getElementById('copy-btn').addEventListener('click', () => {
       const textarea = document.getElementById('share-text');
       textarea.select();
@@ -290,8 +295,7 @@
       });
     });
 
-    // 初回レンダリング
-    render();
+    buildPlayerRows();
   </script>
 </body>
 </html>
